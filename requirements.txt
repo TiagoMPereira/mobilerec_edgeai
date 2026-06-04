@@ -4,3 +4,4 @@ matplotlib==3.10.0
 scikit-learn==1.6.1
 datasets==4.0.0
 tensorflow==2.20.0
+sentence-transformers==5.5.1

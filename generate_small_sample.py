@@ -7,7 +7,7 @@ if __name__ == "__main__":
     # Set random seed for reproducibility
     np.random.seed(42)
     
-    interactions = pd.read_csv("data/input/interactions.csv", usecols=["uid", "app_package"])
+    interactions = pd.read_csv("data/input/interactions.csv")
     interactions["app_package"] = interactions["app_package"].astype("category")
     interactions["uid"] = interactions["uid"].astype("category")
 
