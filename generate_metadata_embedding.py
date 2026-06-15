@@ -39,6 +39,7 @@ if __name__ == "__main__":
     used_items = set(sampled_data["items"])
 
     metadata = metadata[metadata["app_package"].isin(used_items)]
+    metadata = metadata.reset_index(drop=True)
 
     metadata["description"] = remove_illegal_char(metadata["description"])
     metadata["description"] = metadata["description"].apply(clean_text)
@@ -90,3 +91,4 @@ if __name__ == "__main__":
 
     print("Embeddings reduced...")
     print(pca_df.head())
+    print(pca_df.tail(20))

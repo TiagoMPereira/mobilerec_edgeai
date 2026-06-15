@@ -11,6 +11,9 @@ if __name__ == "__main__":
     interactions["app_package"] = interactions["app_package"].astype("category")
     interactions["uid"] = interactions["uid"].astype("category")
 
+    interactions = interactions.loc[interactions["app_package"] != ""]
+    interactions = interactions.loc[interactions["uid"] != ""]
+
     # Remove itens with less than 100 interactions
     app_counts = interactions["app_package"].value_counts()
     interactions = interactions[interactions["app_package"].isin(app_counts[app_counts >= 100].index)]
