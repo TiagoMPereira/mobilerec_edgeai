@@ -36,23 +36,43 @@ def create_historical_dataset(interactions: pd.DataFrame) -> pd.DataFrame:
     interactions = interactions.sort_values(by=["uid", "formated_date"], ascending=True)
     interactions.reset_index(drop=True, inplace=True)
 
-    historical_data = interactions.loc[interactions["split_type"] == "historic"].groupby("uid").agg({"rating": "median", "formated_date": "max"})
+    agg = {
+        "rating": "mean",
+        "formated_date": "max"
+    }
+    for col in interactions.columns:
+        if col.startswith("cat_"):
+            agg[col] = "mean"
+
+    historical_data = interactions.loc[interactions["split_type"] == "historic"].groupby("uid").agg(agg)
     historical_data = historical_data.rename(columns={"rating": "ref_rating", "formated_date": "ref_date"}).reset_index()
 
     return historical_data
 
 if __name__ == "__main__":
 
-    interactions = pd.read_csv("data/input/sampled_interactions.csv")
-    metadata = pd.read_csv("data/processed/metadata_embeddings_pca_0.8.csv", index_col=0)
+    interactions = pd.read_csv("data/input/sampled_interactions_01.csv")
+    # metadata = pd.read_csv("data/processed/metadata_embeddings_015.csv", index_col=0)
+    metadata = pd.read_csv("data/processed/metadata_embeddings_pca_0.8_01.csv", index_col=0)
+
+    apps_category = interactions.drop_duplicates(subset=["app_package"], keep="first")[["app_package", "app_category"]].reset_index(drop=True)
+    metadata = pd.merge(metadata, apps_category, on="app_package", how="left")
+    metadata = pd.get_dummies(metadata, columns=['app_category'], prefix='item_cat', prefix_sep='_', dtype=int)
 
     print(interactions.head())
-    print(metadata.head())
+    print(interactions.shape)
 
     # Pre process
-    interactions = interactions.drop(columns=['review', 'votes', 'date', 'unix_timestamp', 'app_category'])
+    interactions = pd.get_dummies(interactions, columns=['app_category'], prefix='cat', prefix_sep='_', dtype=int)
+    cat_cols = []
+    for col in interactions.columns:
+        if col.startswith("cat_"):
+            interactions[col] = interactions[col] * interactions['rating']
+            cat_cols.append(col)
+
+    interactions = interactions.drop(columns=['review', 'votes', 'date', 'unix_timestamp'])
     interactions["app_package"] = interactions["app_package"].astype("category")
-    interactions["uid"] = interactions["uid"].astype("category")
+    # interactions["uid"] = interactions["uid"].astype("category")
     interactions["formated_date"] = pd.to_datetime(interactions["formated_date"])
     interactions["rating"] = interactions["rating"].astype("int8")
 
@@ -64,6 +84,7 @@ if __name__ == "__main__":
     # Creating historical references
     historical_dataset = create_historical_dataset(interactions)
 
+    interactions = interactions.drop(columns=cat_cols)
     interactions = pd.merge(interactions, historical_dataset, on="uid", how="left")
 
     # Create features based on historical behavior
@@ -101,7 +122,8 @@ if __name__ == "__main__":
         interactions_metadata_group["relevancy"], axis=0
     ).reset_index(drop=False)
 
-    interactions_metadata_group.to_csv("data/processed/historic_embeddings.csv")
+    interactions_metadata_group.to_csv("data/processed/historic_embeddings_01_pca.csv")
+    print("Interactions_metadata")
     print(interactions_metadata_group.head())
     print(interactions_metadata_group.tail(20))
     print(interactions_metadata_group.shape)
@@ -122,6 +144,21 @@ if __name__ == "__main__":
     metadata.columns = [f"item_{col}" if "emb_" in col else col for col in metadata.columns]
     historic_embeddings.columns = [f"user_{col}" if "emb_" in col else col for col in historic_embeddings.columns]
 
+    print("INT COLS")
+    for c in interactions_rec.columns:
+        print(c, end=" + ")
+    print()
+
+    print("METADATA COLS")
+    for c in metadata.columns:
+        print(c, end=" + ")
+    print()
+
+    print("HIS COLS")
+    for c in historic_embeddings.columns:
+        print(c, end=" + ")
+    print()
+
     model_dataset = pd.merge(
         interactions_rec, metadata, on="app_package", how="left"
     )
@@ -132,8 +169,11 @@ if __name__ == "__main__":
     print(model_dataset.shape)
     print(model_dataset.head(10))
     print(model_dataset.tail(10))
-    for c in model_dataset.columns:
-        print(c, end=" | ")
 
-    model_dataset.to_csv("data/output/model_data.csv")
+    print("MODEL COLS")
+    for c in model_dataset.columns:
+        print(c, end=" + ")
+    print()
+
+    model_dataset.to_csv("data/output/model_data_01_pca.csv", index=False)
 

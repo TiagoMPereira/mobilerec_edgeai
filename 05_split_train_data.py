@@ -3,7 +3,9 @@ from sklearn.model_selection import train_test_split
 
 if __name__ == "__main__":
 
-    data = pd.read_csv("data/output/model_data.csv", index_col=0)
+    data = pd.read_csv("data/output/model_data_01_pca.csv")
+
+    print(data.columns)
 
     # Get amount of interactions per user
     user_counts = pd.DataFrame({'uid': data['uid'].value_counts().index, 'count': data['uid'].value_counts().values})
@@ -45,6 +47,6 @@ if __name__ == "__main__":
     val_df = data[data['uid'].isin(val_users['uid'])]
     test_df = data[data['uid'].isin(test_users['uid'])]
 
-    train_df.to_csv("data/output/train_data.csv")
-    val_df.to_csv("data/output/val_data.csv")
-    test_df.to_csv("data/output/test_data.csv")
+    train_df.to_csv("data/output/train_data_01_pca.csv")
+    val_df.to_csv("data/output/val_data_01_pca.csv")
+    test_df.to_csv("data/output/test_data_01_pca.csv")

@@ -4,6 +4,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.decomposition import PCA
 import json
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
 
 def remove_illegal_char(column: pd.Series):
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     metadata["app_package"] = metadata["app_package"].astype("category")
 
     # Load used items
-    with open("data/input/sampled_data.json", "r") as f:
+    with open("data/input/sampled_data_01.json", "r") as f:
         sampled_data = json.load(f)
     used_items = set(sampled_data["items"])
 
@@ -56,15 +57,18 @@ if __name__ == "__main__":
     embeddings_df.columns = cols
     embeddings_df.insert(0, "app_package", metadata["app_package"])
 
-    embeddings_df.to_csv("data/processed/metadata_embeddings.csv")
+    embeddings_df.to_csv("data/processed/metadata_embeddings_01.csv")
     print("Embeddings generated...")
     print(embeddings_df.head())
 
     # RUN PCA - OPTIONAL
-    embeddings_df = pd.read_csv("data/processed/metadata_embeddings.csv", index_col=0)
+    embeddings_df = pd.read_csv("data/processed/metadata_embeddings_01.csv", index_col=0)
     MIN_EXPLAINABILITY = 0.8
 
+    scaler = StandardScaler()
+
     emb_cols = [col for col in embeddings_df.columns if col.startswith("emb_")]
+    embeddings_df[emb_cols] = scaler.fit_transform(embeddings_df[emb_cols])
     embedding_values = embeddings_df[emb_cols].to_numpy()
 
     PCA_DIM = embedding_values.shape[1]
@@ -87,7 +91,7 @@ if __name__ == "__main__":
     pca_df.columns = pca_emb_names
     pca_df.insert(0, "app_package", embeddings_df["app_package"])
 
-    pca_df.to_csv(f"data/processed/metadata_embeddings_pca_{MIN_EXPLAINABILITY}.csv")
+    pca_df.to_csv(f"data/processed/metadata_embeddings_pca_{MIN_EXPLAINABILITY}_01.csv")
 
     print("Embeddings reduced...")
     print(pca_df.head())

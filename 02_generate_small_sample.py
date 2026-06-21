@@ -41,7 +41,7 @@ if __name__ == "__main__":
     user_counts.loc[user_counts["count"] > q3, "strata"] = "Q4"
 
     total_users = len(user_counts)
-    sample_ratio = 0.05
+    sample_ratio = 0.15
     sample_size = int(sample_ratio * total_users)
 
     quartiles_proportions = user_counts[["strata"]].value_counts(normalize=True).reset_index()
@@ -60,6 +60,6 @@ if __name__ == "__main__":
     sampled_items = sampled_interactions['app_package'].unique().tolist()
 
     # Save the sampled interactions and items to new CSV files
-    sampled_interactions.to_csv("data/input/sampled_interactions.csv", index=False)
-    with open("data/input/sampled_data.json", "w") as f:
+    sampled_interactions.to_csv("data/input/sampled_interactions_015.csv", index=False)
+    with open("data/input/sampled_data_015.json", "w") as f:
         json.dump({"users": selected_users, "items": sampled_items}, f)
