@@ -153,8 +153,6 @@ class RatingModelOptimizer:
         cat_emb_units  = trial.suggest_int('category_emb_units', 2, 8, log=True)
         loss_type      = trial.suggest_categorical('loss_type', ['mse', 'huber', 'mae'])
         huber_delta    = trial.suggest_float('huber_delta', 0.3, 2.0)
-        # Peso amostral: extremos recebem mais atenção (combate à distribuição bimodal)
-        weight_power   = trial.suggest_categorical('weight_power', [0.5, 1.0, 1.5, 2.0])
         # Peso da loss auxiliar BCE (sinal da nota — positivo vs negativo)
         aux_weight     = trial.suggest_categorical('aux_weight', [0.0, 0.1, 0.3, 0.5])
 
@@ -216,8 +214,9 @@ class RatingModelOptimizer:
         return (w / w.mean()).astype('float32')   # normaliza para média 1
 
     def objective(self, trial):
+        # weight_power é sugerido aqui porque é um hiperparâmetro de treino, não de arquitetura
+        weight_power = trial.suggest_categorical('weight_power', [0.5, 1.0, 1.5, 2.0])
         model        = self._build_model(trial)
-        weight_power = trial.params['weight_power']
         sw_train     = self._compute_sample_weights(self.y_train, weight_power)
 
         callbacks = [
